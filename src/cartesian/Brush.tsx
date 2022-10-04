@@ -275,11 +275,13 @@ export class Brush extends PureComponent<Props, State> {
   };
 
   attachDragEndListener() {
+    window.addEventListener('mousemove', this.handleDrag, true);
     window.addEventListener('mouseup', this.handleDragEnd, true);
     window.addEventListener('touchend', this.handleDragEnd, true);
   }
 
   detachDragEndListener() {
+    window.removeEventListener('mousemove', this.handleDrag, true);
     window.removeEventListener('mouseup', this.handleDragEnd, true);
     window.removeEventListener('touchend', this.handleDragEnd, true);
   }
@@ -538,7 +540,6 @@ export class Brush extends PureComponent<Props, State> {
     return (
       <Layer
         className={layerClass}
-        onMouseMove={this.handleDrag}
         onMouseLeave={this.handleLeaveWrapper}
         onTouchMove={this.handleTouchMove}
         style={style}
