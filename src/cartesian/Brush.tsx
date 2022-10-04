@@ -1,7 +1,7 @@
 /**
  * @fileOverview Brush
  */
-import React, { PureComponent, Children, ReactText, MouseEvent, ReactElement, TouchEvent, SVGProps } from 'react';
+import React, { PureComponent, Children, ReactText, ReactElement, TouchEvent, SVGProps } from 'react';
 import classNames from 'classnames';
 import { scalePoint, ScalePoint } from 'd3-scale';
 import _ from 'lodash';
@@ -107,7 +107,7 @@ const createScale = ({
   };
 };
 
-const isTouch = (e: TouchEvent<SVGElement> | MouseEvent<SVGElement>): e is TouchEvent<SVGElement> =>
+const isTouch = (e: TouchEvent<SVGElement> | React.MouseEvent<SVGElement>): e is TouchEvent<SVGElement> =>
   (e as TouchEvent<SVGElement>).changedTouches && !!(e as TouchEvent<SVGElement>).changedTouches.length;
 
 export class Brush extends PureComponent<Props, State> {
@@ -139,7 +139,7 @@ export class Brush extends PureComponent<Props, State> {
 
   travellerDragStartHandlers?: Record<
     BrushTravellerId,
-    (event: MouseEvent<SVGGElement> | TouchEvent<SVGGElement>) => void
+    (event: React.MouseEvent<SVGGElement> | TouchEvent<SVGGElement>) => void
   >;
 
   static renderDefaultTraveller(props: any) {
@@ -255,7 +255,7 @@ export class Brush extends PureComponent<Props, State> {
     return _.isFunction(tickFormatter) ? tickFormatter(text, index) : text;
   }
 
-  handleDrag = (e: React.Touch | MouseEvent<SVGGElement>) => {
+  handleDrag = (e: React.Touch | React.MouseEvent<SVGGElement>) => {
     if (this.leaveTimer) {
       clearTimeout(this.leaveTimer);
       this.leaveTimer = null;
@@ -274,14 +274,18 @@ export class Brush extends PureComponent<Props, State> {
     }
   };
 
+  handleDragHandler = (e: MouseEvent) => {
+    this.handleDrag(e as unknown as React.Touch | React.MouseEvent<SVGGElement>);
+  };
+
   attachDragEndListener() {
-    window.addEventListener('mousemove', this.handleDrag, true);
+    window.addEventListener('mousemove', this.handleDragHandler, true);
     window.addEventListener('mouseup', this.handleDragEnd, true);
     window.addEventListener('touchend', this.handleDragEnd, true);
   }
 
   detachDragEndListener() {
-    window.removeEventListener('mousemove', this.handleDrag, true);
+    window.removeEventListener('mousemove', this.handleDragHandler, true);
     window.removeEventListener('mouseup', this.handleDragEnd, true);
     window.removeEventListener('touchend', this.handleDragEnd, true);
   }
@@ -312,7 +316,7 @@ export class Brush extends PureComponent<Props, State> {
     });
   };
 
-  handleSlideDragStart = (e: TouchEvent<SVGRectElement> | MouseEvent<SVGRectElement>) => {
+  handleSlideDragStart = (e: TouchEvent<SVGRectElement> | React.MouseEvent<SVGRectElement>) => {
     const event = isTouch(e) ? e.changedTouches[0] : e;
 
     this.setState({
@@ -324,10 +328,12 @@ export class Brush extends PureComponent<Props, State> {
     this.attachDragEndListener();
   };
 
-  handleSlideDrag(e: React.Touch | MouseEvent<SVGGElement>) {
+  handleSlideDrag(e: React.Touch | React.MouseEvent<SVGGElement>) {
     const { slideMoveStartX, startX, endX } = this.state;
     const { x, width, travellerWidth, startIndex, endIndex, onChange } = this.props;
     let delta = e.pageX - slideMoveStartX;
+
+    if (e.pageX < startX || e.pageX > endX) return;
 
     if (delta > 0) {
       delta = Math.min(delta, x + width - travellerWidth - endX, x + width - travellerWidth - startX);
@@ -350,7 +356,7 @@ export class Brush extends PureComponent<Props, State> {
     });
   }
 
-  handleTravellerDragStart(id: BrushTravellerId, e: MouseEvent<SVGGElement> | TouchEvent<SVGGElement>) {
+  handleTravellerDragStart(id: BrushTravellerId, e: React.MouseEvent<SVGGElement> | TouchEvent<SVGGElement>) {
     const event = isTouch(e) ? e.changedTouches[0] : e;
 
     this.setState({
@@ -363,7 +369,7 @@ export class Brush extends PureComponent<Props, State> {
     this.attachDragEndListener();
   }
 
-  handleTravellerMove(e: React.Touch | MouseEvent<SVGGElement>) {
+  handleTravellerMove(e: React.Touch | React.MouseEvent<SVGGElement>) {
     const { brushMoveStartX, movingTravellerId, endX, startX } = this.state;
     const prevValue = this.state[movingTravellerId];
 
